@@ -1,0 +1,9 @@
+{
+  "description": "Recorded queries against the fixture community (test/fixtures/profiles.json). `expectedMembers` is the exact set that should be returned; `expectNoMatch` means nobody fits.",
+  "queries": [
+    { "id": "rust-mentor", "question": "Is anyone here good at Rust and free to mentor this month?", "expectedMembers": ["aiko.eth", "fumi.eth"], "mustNotInclude": ["ben.eth"] },
+    { "id": "solidity-security", "question": "Who can review the security of my Solidity contract?", "expectedMembers": ["chika.eth"] },
+    { "id": "design", "question": "I need help with Figma and onboarding UX", "expectedMembers": ["daichi.eth"] },
+    { "id": "cobol", "question": "Does anyone know COBOL?", "expectNoMatch": true }
+  ]
+}
