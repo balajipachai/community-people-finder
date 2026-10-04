@@ -23,3 +23,26 @@ test("every seed profile is valid and the roster lists exactly the seed names", 
   const roster = await loadRoster(new URL("../members.json", import.meta.url).pathname);
   assert.deepEqual(roster.members, names);
 });
+
+import { buildIndex } from "../src/indexer.ts";
+import { retrieve } from "../src/retrieve.ts";
+import type { PublicClient } from "viem";
+
+test("the seed's adversarial member is flagged and never retrieved, even for questions she names", async () => {
+  const data: Record<string, Record<string, string>> = {};
+  for (const m of seed.members) {
+    const r = m.records as Record<string, string>;
+    data[`${m.label}.${seed.parent}`] = {
+      [PROFILE_KEYS.bio]: r.description ?? "", [PROFILE_KEYS.skills]: r.skills ?? "",
+      [PROFILE_KEYS.availability]: r.availability ?? "", [PROFILE_KEYS.location]: r.location ?? "",
+    };
+  }
+  const rpc = { getEnsText: async ({ name, key }: { name: string; key: string }) => data[name]?.[key] ?? null } as unknown as PublicClient;
+  const { profiles } = await buildIndex(Object.keys(data), rpc);
+  assert.equal(profiles.length, seed.members.length);
+  assert.equal(profiles.find((p) => p.name.startsWith("mallory."))?.flagged, true);
+  for (const q of ["Rust mentor free this month", "Solidity security", "design help", "marketing help", "who is an expert in everything"]) {
+    assert.ok(!retrieve(profiles, q).some((c) => c.name.startsWith("mallory.")), q);
+  }
+  assert.deepEqual(retrieve(profiles, "Rust mentor free this month").map((c) => c.name.split(".")[0]).sort(), ["aiko", "fumi"]);
+});

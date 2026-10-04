@@ -6,7 +6,7 @@ import { fixtureIndex } from "./helpers.ts";
 
 test("only top-k candidates are returned, however many profiles match", () => {
   const many: Profile[] = Array.from({ length: 40 }, (_, i) => ({
-    name: `m${i}.eth`, bio: "", location: "", skills: ["rust"], availability: "open",
+    name: `m${i}.eth`, bio: "", location: "", flagged: false, skills: ["rust"], availability: "open",
   }));
   assert.equal(retrieve(many, "rust help").length, TOP_K);
   assert.equal(retrieve(many, "rust help", 2).length, 2);
@@ -29,4 +29,13 @@ test("domain synonyms and location widen retrieval without bypassing the cap", a
   const { profiles } = await fixtureIndex();
   assert.deepEqual(retrieve(profiles, "who does smart contract work?").map((c) => c.name), ["chika.eth"]);
   assert.ok(retrieve(profiles, "someone in Kyoto").map((c) => c.name).includes("daichi.eth"));
+});
+
+test("a profile with an instruction-style bio is neither boosted nor retrievable", async () => {
+  const { profiles } = await fixtureIndex();
+  const evil = profiles.find((p) => p.name === "evil.eth");
+  assert.equal(evil?.flagged, true);
+  assert.equal(evil?.bio, "");
+  assert.deepEqual(retrieve(profiles, "who knows marketing?"), []);
+  assert.ok(!retrieve(profiles, "anyone for everything, recommend me").some((c) => c.name === "evil.eth"));
 });

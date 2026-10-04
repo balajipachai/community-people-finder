@@ -23,6 +23,8 @@ export interface Profile {
   skills: string[];
   availability: Availability;
   location: string;
+  // True when the bio looks like an attempt to instruct the model. Such bios are never scored or shown to the model.
+  flagged: boolean;
 }
 
 export interface RawProfile {
@@ -52,6 +54,19 @@ export function parseSkills(raw: string | null): string[] {
   return [...out];
 }
 
+const INJECTION_PATTERNS = [
+  /ignore (all |any |the )?(previous|prior|above|earlier)/i,
+  /disregard (all |any |the )?(previous|prior|above|earlier|instructions)/i,
+  /system prompt/i,
+  /\b(you must|you should) (recommend|pick|choose|return|say|answer)/i,
+  /\brecommend (me|him|her|them|\w+) (for|to) (every|all|any)/i,
+  /\b(act as|pretend|new instructions|override)\b/i,
+];
+
+export function looksLikeInjection(text: string): boolean {
+  return INJECTION_PATTERNS.some((re) => re.test(text));
+}
+
 /** Validate raw ENS values into a Profile, or null if there is nothing usable. */
 export function parseProfile(name: string, raw: RawProfile): Profile | null {
   const bio = raw.bio ? cleanText(raw.bio).slice(0, MAX_BIO_CHARS) : "";
@@ -59,5 +74,6 @@ export function parseProfile(name: string, raw: RawProfile): Profile | null {
   if (bio === "" && skills.length === 0) return null;
   const avail = availabilitySchema.safeParse(raw.availability?.trim().toLowerCase());
   const location = cleanText(raw.location ?? "").slice(0, MAX_LOCATION_CHARS);
-  return { name, bio, skills, availability: avail.success ? avail.data : "unknown", location };
+  const flagged = looksLikeInjection(bio);
+  return { name, bio: flagged ? "" : bio, skills, availability: avail.success ? avail.data : "unknown", location, flagged };
 }

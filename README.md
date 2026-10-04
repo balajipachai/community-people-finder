@@ -41,7 +41,7 @@ Or edit the same text records in the ENS app (sepolia.app.ens.domains).
 
 `aiko`, `ben`, `chika`, `daichi`, `emi`, `fumi`, `goro`, `mallory` `.iamdoraemon.eth`
 
-`mallory` is **deliberately adversarial**: her bio tells the model to recommend her for everything. She is only ever retrieved on a literal match and, like everyone, is passed to the model as data and checked against the retrieved candidates.
+`mallory` is **deliberately adversarial**: her bio tells the model to recommend her for everything. `looksLikeInjection` (`src/profile.ts`) flags instruction-style bios. A flagged profile is **never boosted** (its bio is dropped, so stuffed keywords gain nothing) and **never shown to the model or returned** (`src/retrieve.ts`). Every other profile is still passed as data and checked against the retrieved candidates.
 
 **Status: records not yet published.** Until they are, the app indexes zero profiles (members with no records are skipped as `no-profile`) and honestly answers "nobody fits." To publish: create the subnames in sepolia.app.ens.domains, then from the owning wallet run `PRIVATE_KEY=0x... npm run seed` (`-- --dry` previews). To refresh after profiles change, use the **Refresh profiles** button (`POST /api/refresh`); the index also re-reads every `INDEX_TTL_MS`.
 
@@ -49,6 +49,7 @@ Or edit the same text records in the ENS app (sepolia.app.ens.domains).
 
 - **No invented people.** `src/finder.ts` keeps only model-named people who are in the retrieved candidate set, deduplicated; everyone else is removed before display. If none remain: no-match.
 - **Bounded prompt.** `TOP_K = 5` in `src/retrieve.ts` caps how many profiles ever reach the model.
+- **Reasons cite facts.** The prompt requires each reason to cite the specific skills, availability or location that matched.
 - **Prompt isolation.** `src/prompt.ts`: the system prompt is app-authored. Profiles (untrusted, user-controlled) travel as JSON in a separate user message, and the system prompt tells the model to treat them as data.
 - **Index from ENS.** `src/indexer.ts` reads each member's text records via viem; one failing or empty member never breaks the build.
 - **Honest empty result.** No candidates → explicit no-match without calling the model; a model that says nobody fits, or returns garbage, → the same.
@@ -58,7 +59,7 @@ Or edit the same text records in the ENS app (sepolia.app.ens.domains).
 
 ```bash
 npm install
-cp .env.example .env     # add LLM_API_KEY
+cp .env.example .env     # pick a provider; free options (Ollama, Gemini, Groq) are listed in the file
 # put your community's ENS names in members.json: { "community": "...", "members": ["aiko.eth", ...] }
 set -a; source .env; set +a
 npm start                # http://localhost:3000

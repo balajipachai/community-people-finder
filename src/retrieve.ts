@@ -57,6 +57,8 @@ export function retrieve(profiles: Profile[], query: string, k: number = TOP_K):
 
   const scored: Candidate[] = [];
   for (const p of profiles) {
+    // Profiles whose bio tries to instruct the model are neither boosted nor shown to it.
+    if (p.flagged) continue;
     if (wantsAvailable && p.availability === "unavailable") continue;
     const skillTokens = new Set(p.skills.flatMap(tokenize));
     const bioTokens = new Set(tokenize(p.bio));
