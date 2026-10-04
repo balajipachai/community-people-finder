@@ -6,6 +6,7 @@ export const PROFILE_KEYS = {
   bio: "description",
   skills: "app.community.skills", // comma-separated, e.g. "rust, wasm, mentoring"
   availability: "app.community.availability", // open | limited | unavailable
+  location: "app.community.location", // city or region, e.g. "Tokyo"
 } as const;
 
 export const AVAILABILITY = ["open", "limited", "unavailable"] as const;
@@ -14,18 +15,21 @@ export type Availability = (typeof AVAILABILITY)[number] | "unknown";
 export const MAX_BIO_CHARS = 500;
 export const MAX_SKILLS = 12;
 export const MAX_SKILL_CHARS = 32;
+export const MAX_LOCATION_CHARS = 48;
 
 export interface Profile {
   name: string; // normalized ENS name
   bio: string;
   skills: string[];
   availability: Availability;
+  location: string;
 }
 
 export interface RawProfile {
   bio: string | null;
   skills: string | null;
   availability: string | null;
+  location?: string | null;
 }
 
 const SKILL_RE = /^[\p{L}\p{N}][\p{L}\p{N} +#.\-]*$/u;
@@ -54,5 +58,6 @@ export function parseProfile(name: string, raw: RawProfile): Profile | null {
   const skills = parseSkills(raw.skills);
   if (bio === "" && skills.length === 0) return null;
   const avail = availabilitySchema.safeParse(raw.availability?.trim().toLowerCase());
-  return { name, bio, skills, availability: avail.success ? avail.data : "unknown" };
+  const location = cleanText(raw.location ?? "").slice(0, MAX_LOCATION_CHARS);
+  return { name, bio, skills, availability: avail.success ? avail.data : "unknown", location };
 }

@@ -27,6 +27,7 @@ export function buildMessages(question: string, candidates: Candidate[]): ChatMe
       bio: c.bio,
       skills: c.skills,
       availability: c.availability,
+      location: c.location,
     })),
   };
   return [

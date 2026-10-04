@@ -33,7 +33,7 @@
   <h1>Who in here can help me?</h1>
   <p class="sub" id="status">Ask in plain language. Answers come only from real member profiles on ENS.</p>
   <textarea id="q" rows="3" maxlength="500" placeholder="Is anyone good at Rust and free to mentor this month?"></textarea>
-  <button id="go">Find people</button>
+  <button id="go">Find people</button> <button id="refresh" type="button" style="background:transparent;color:var(--accent);border:1px solid var(--accent)">Refresh profiles</button>
   <div id="out"></div>
 </main>
 <script>
@@ -45,6 +45,11 @@ function el(tag, attrs = {}, ...kids) {
   for (const k of kids) e.append(k);
   return e;
 }
+function showStatus(s) { if (s.indexed !== undefined) $("status").textContent = `${s.community || "Community"}: ${s.indexed} member profiles read from ENS.`; }
+$("refresh").addEventListener("click", async () => {
+  $("status").textContent = "Re-reading profiles from ENS…";
+  try { showStatus({ community: "Community", ...(await (await fetch("/api/refresh", { method: "POST" })).json()) }); } catch { $("status").textContent = "Refresh failed."; }
+});
 fetch("/api/status").then((r) => r.json()).then((s) => {
   if (s.indexed !== undefined) $("status").textContent = `${s.community}: ${s.indexed} member profiles read from ENS.`;
 }).catch(() => {});
@@ -70,7 +75,7 @@ $("go").addEventListener("click", async () => {
       return el("div", { class: "card" },
         el("div", { class: "who" }, link, el("span", { class: `tag ${m.availability}` }, m.availability)),
         el("div", { class: "reason" }, m.reason),
-        el("div", { class: "meta" }, m.skills.join(" · ")));
+        el("div", { class: "meta" }, [m.location, ...m.skills].filter(Boolean).join(" · ")));
     }));
   } catch (e) {
     out.replaceChildren(el("p", { class: "err" }, e.message));

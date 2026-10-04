@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "cases": "tsx scripts/run-cases.ts",
-    "set-profile": "tsx scripts/set-profile.ts"
+    "set-profile": "tsx scripts/set-profile.ts",
+    "seed": "tsx scripts/seed.ts"
   },
   "engines": { "node": ">=20" },
   "dependencies": { "viem": "^2.21.0", "zod": "^3.23.8" },

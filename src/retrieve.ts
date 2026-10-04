@@ -12,6 +12,24 @@ const STOPWORDS = new Set(
 
 const AVAILABILITY_INTENT = /\b(free|available|availability|spare|capacity|time|this (week|month))\b/i;
 
+// Small domain vocabulary so "smart contracts" finds a Solidity profile. Expansion only adds
+// query terms; the model and the membership check still decide what is returned.
+const SYNONYMS: Record<string, string[]> = {
+  contract: ["solidity"],
+  security: ["audit", "audits"],
+  audit: ["security"],
+  frontend: ["react", "css", "ui"],
+  backend: ["node", "api", "server"],
+  design: ["ux", "ui", "figma"],
+  designer: ["design", "ux", "ui", "figma"],
+  ux: ["design"],
+  ml: ["machine", "learning"],
+  ai: ["ml", "machine", "learning"],
+  mentor: ["mentoring"],
+  wasm: ["webassembly"],
+  js: ["javascript", "typescript"],
+};
+
 const stem = (t: string) => (t.length > 4 && t.endsWith("s") ? t.slice(0, -1) : t);
 
 export function tokenize(text: string): string[] {
@@ -19,7 +37,8 @@ export function tokenize(text: string): string[] {
 }
 
 export function queryTokens(query: string): string[] {
-  return [...new Set(tokenize(query).filter((t) => t.length > 1 && !STOPWORDS.has(t)))];
+  const base = tokenize(query).filter((t) => t.length > 1 && !STOPWORDS.has(t));
+  return [...new Set(base.flatMap((t) => [t, ...(SYNONYMS[t] ?? [])].map(stem)))];
 }
 
 export interface Candidate extends Profile {
@@ -41,9 +60,11 @@ export function retrieve(profiles: Profile[], query: string, k: number = TOP_K):
     if (wantsAvailable && p.availability === "unavailable") continue;
     const skillTokens = new Set(p.skills.flatMap(tokenize));
     const bioTokens = new Set(tokenize(p.bio));
+    const locationTokens = new Set(tokenize(p.location));
     let score = 0;
     for (const t of tokens) {
       if (skillTokens.has(t)) score += 3;
+      else if (locationTokens.has(t)) score += 2;
       else if (bioTokens.has(t)) score += 1;
     }
     if (score === 0) continue;

@@ -48,6 +48,12 @@ async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> 
     return;
   }
 
+  if (req.method === "POST" && url.pathname === "/api/refresh") {
+    const index = await getIndex(true);
+    send(res, 200, { indexed: index.profiles.length, skipped: index.skipped.length, builtAt: new Date(index.builtAt).toISOString() });
+    return;
+  }
+
   if (req.method === "POST" && url.pathname === "/api/ask") {
     const body = await readJson(req);
     const question = typeof body.question === "string" ? body.question.trim() : "";

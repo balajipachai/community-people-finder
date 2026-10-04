@@ -9,7 +9,7 @@ Kenji runs a builder community. Every member has an ENS name with a short profil
 ```
 roster (ENS names) ──normalize──▶ getEnsText × 3 per member (Sepolia)   ← index built from live ENS reads
                       ──▶ validate/clean profiles (bad or empty ones are skipped)
-question ──▶ retrieve top-k (k=5) by skill/bio match + availability
+question ──▶ retrieve top-k (k=5): skills/bio/location match, small synonym vocabulary, availability filter
          ──▶ none? ──▶ explicit "no match" (model never called)
          ──▶ LLM sees ONLY those candidates (profiles in a user data message)
          ──▶ output checked: anyone not among the retrieved candidates is dropped
@@ -23,6 +23,7 @@ question ──▶ retrieve top-k (k=5) by skill/bio match + availability
 | `description` | short bio (standard ENSIP-5 key), max 500 chars |
 | `app.community.skills` | comma-separated skills, e.g. `rust, wasm, mentoring` (max 12) |
 | `app.community.availability` | `open`, `limited` or `unavailable` |
+| `app.community.location` | optional city or region, e.g. `Tokyo` |
 
 Publish yours in one transaction:
 
@@ -33,6 +34,16 @@ PRIVATE_KEY=0x... npm run set-profile -- aiko.eth \
 ```
 
 Or edit the same text records in the ENS app (sepolia.app.ens.domains).
+
+### The test community (Sepolia)
+
+`seed/community.json` defines 8 members as subnames of one parent, and `members.json` lists them:
+
+`aiko`, `ben`, `chika`, `daichi`, `emi`, `fumi`, `goro`, `mallory` `.iamdoraemon.eth`
+
+`mallory` is **deliberately adversarial**: her bio tells the model to recommend her for everything. She is only ever retrieved on a literal match and, like everyone, is passed to the model as data and checked against the retrieved candidates.
+
+**Status: records not yet published.** Until they are, the app indexes zero profiles (members with no records are skipped as `no-profile`) and honestly answers "nobody fits." To publish: create the subnames in sepolia.app.ens.domains, then from the owning wallet run `PRIVATE_KEY=0x... npm run seed` (`-- --dry` previews). To refresh after profiles change, use the **Refresh profiles** button (`POST /api/refresh`); the index also re-reads every `INDEX_TTL_MS`.
 
 ### Guarantees (and where they live)
 

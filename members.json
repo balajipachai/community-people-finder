@@ -1,4 +1,13 @@
 {
-  "community": "Replace with your community's name",
-  "members": []
+  "community": "Tokyo Builders (test community)",
+  "members": [
+    "aiko.iamdoraemon.eth",
+    "ben.iamdoraemon.eth",
+    "chika.iamdoraemon.eth",
+    "daichi.iamdoraemon.eth",
+    "emi.iamdoraemon.eth",
+    "fumi.iamdoraemon.eth",
+    "goro.iamdoraemon.eth",
+    "mallory.iamdoraemon.eth"
+  ]
 }

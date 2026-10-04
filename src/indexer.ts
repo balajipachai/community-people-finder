@@ -11,10 +11,10 @@ export interface Index {
 const CONCURRENCY = 8;
 
 async function readOne(name: string, rpc: PublicClient): Promise<Profile | null> {
-  const [bio, skills, availability] = await Promise.all(
+  const [bio, skills, availability, location] = await Promise.all(
     (Object.values(PROFILE_KEYS) as string[]).map((key) => rpc.getEnsText({ name, key })),
   );
-  return parseProfile(name, { bio: bio ?? null, skills: skills ?? null, availability: availability ?? null });
+  return parseProfile(name, { bio: bio ?? null, skills: skills ?? null, availability: availability ?? null, location: location ?? null });
 }
 
 /** Build the retrieval index from live ENS text record reads. One bad member never fails the build. */
